@@ -41,8 +41,8 @@ def trainVAE(train_loader, model, criterion, optimizer, epoch, args):
         if args.cuda:
             input = input.cuda()
 
-        recon_batch, mu, logvar = model(input)
-        loss, loss_details = criterion(recon_batch, input, mu, logvar)
+        recon_batch, mu, log_var = model(input)
+        loss, loss_details = criterion(recon_batch, input, mu, log_var)
 
         # record loss
         loss_avg.update(loss.item(), input.size(0))
@@ -90,8 +90,8 @@ def validateVAE(val_loader, model, criterion, args):
             input = input.cuda()
 
         # compute output
-        recon_batch, mu, logvar = model(input)
-        loss, loss_details = criterion(recon_batch, input, mu, logvar)
+        recon_batch, mu, log_var = model(input)
+        loss, loss_details = criterion(recon_batch, input, mu, log_var)
 
         # measure accuracy and record loss
         loss_avg.update(loss.item(), input.size(0))
@@ -112,6 +112,7 @@ def validateVAE(val_loader, model, criterion, args):
                    kl_avg=kl_avg, loss=loss_avg))
     return loss_avg.avg, kl_avg.avg, reconst_logp_avg.avg
 
+
 def evaluateVAE(test_loader, model, criterion, args):
     """
     iterate through test loader and find out average loss of normal and
@@ -124,19 +125,17 @@ def evaluateVAE(test_loader, model, criterion, args):
     model.eval()
 
     for i, (input, target) in tqdm(enumerate(test_loader)):
-       if args.cuda:
-           input = input.cuda()
+        if args.cuda:
+            input = input.cuda()
 
-       # compute output
-       recon_batch, mu, logvar = model(input)
-       loss, loss_details = criterion(recon_batch, input, mu, logvar)
+        # compute output
+        recon_batch, mu, log_var = model(input)
+        loss, loss_details = criterion(recon_batch, input, mu, log_var)
 
-       # if normal
-       if target.item() == 1:
-           avg_normal_loss.update(loss.item(), input.size(0))
-       else:
-           avg_abnormal_loss.update(loss.item(), input.size(0))
+        # if normal
+        if target.item() == 1:
+            avg_normal_loss.update(loss.item(), input.size(0))
+        else:
+            avg_abnormal_loss.update(loss.item(), input.size(0))
 
     return avg_normal_loss.avg, avg_abnormal_loss.avg
-
-

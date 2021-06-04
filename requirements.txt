@@ -1,0 +1,14 @@
+pip==21.1.2
+setuptools==57.0.0
+tqdm==4.61.0
+
+# PyTorch
+--find-links https://download.pytorch.org/whl/torch_stable.html
+torch==1.7.1
+torchvision==0.8.2
+
+pandas~=1.2.4
+
+numpy~=1.20.3
+scipy~=1.6.3
+scikit-learn~=0.24.2

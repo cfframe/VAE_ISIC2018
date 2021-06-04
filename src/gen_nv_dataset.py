@@ -1,8 +1,8 @@
 """
-    Created by yuchen on 6/20/18
+    Created by Yuchen on 6/20/18
     Description: This script generate the correct dataset structure for VAE outlier experiments
 
-    souce directory structure:
+    source directory structure:
     src_dir
     ├── test
     │   ├── class1
@@ -70,6 +70,7 @@ if '.DS_Store' in classes:
 classes.sort()
 paths = [os.path.abspath(path) for path in glob.iglob(pathjoin(SRC_DIR, '**', '*.jpg'), recursive=True)]
 
+
 def get_class(img_path, classes):
     """
     get class name from the image path
@@ -78,6 +79,7 @@ def get_class(img_path, classes):
         if cls in img_path:
             return cls
     logging.error("img_path %s is invalid!", img_path)
+
 
 # arrange path according to class
 paths_by_class = {cls: [] for cls in classes}
@@ -92,6 +94,7 @@ nv_train_paths = nv_paths[:split]
 nv_val_paths = nv_paths[split:]
 logging.info('num. train images: {}\tnum. val images: {}'.format(
              len(nv_train_paths), len(nv_val_paths)))
+
 
 def symlink_without_replace(src_file, tar_dir):
     """

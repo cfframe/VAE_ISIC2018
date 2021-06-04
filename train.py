@@ -124,7 +124,7 @@ for epoch in range(args.epochs):
         imgs = val_iter._get_batch()[1][0][:25]
         if args.cuda:
             imgs = imgs.cuda()
-        imgs_reconst, mu, logvar = model(imgs)
+        imgs_reconst, mu, log_var = model(imgs)
 
         # sample 25 imgs
         noises = torch.randn(25, model.nz, 1, 1)
@@ -148,4 +148,4 @@ for epoch in range(args.epochs):
         write_image("samples", samples)
         print('done')
 
-import ipdb
+# import ipdb

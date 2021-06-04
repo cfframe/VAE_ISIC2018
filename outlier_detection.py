@@ -44,7 +44,8 @@ if args.cuda:
 # load data
 test_loader = load_vae_test_datasets(args.image_size, args.data)
 
-############################# ANOMALY SCORE DEF ##########################
+
+# ############################ ANOMALY SCORE DEF ##########################
 def get_vae_score(vae, image, L=5):
     """
     The vae score for a single image, which is basically the loss
@@ -55,9 +56,10 @@ def get_vae_score(vae, image, L=5):
                                image.size(1),
                                image.size(2),
                                image.size(3))
-    reconst_batch, mu, logvar = vae.forward(image_batch)
-    vae_loss, loss_details = criterion(reconst_batch, image_batch, mu, logvar)
+    reconst_batch, mu, log_var = vae.forward(image_batch)
+    vae_loss, loss_details = criterion(reconst_batch, image_batch, mu, log_var)
     return vae_loss, loss_details['KL'], -loss_details['reconst_logp']
+
 
 def _log_mean_exp(x, dim):
     """
@@ -77,11 +79,12 @@ def _log_mean_exp(x, dim):
     return m + torch.log(torch.mean(torch.exp(x0),
                                     dim=dim))
 
+
 def get_iwae_score(vae, image, L=5):
     """
     The vae score for a single image, which is basically the loss
     :param image: [1, 3, 256, 256]
-    :return scocre: (iwae score, iwae KL, iwae reconst).
+    :return score: (iwae score, iwae KL, iwae reconst).
     """
     # [L, 3, 256, 256]
     image_batch = image.expand(L,
@@ -90,9 +93,9 @@ def get_iwae_score(vae, image, L=5):
                                image.size(3))
 
     # [L, z_dim, 1, 1]
-    mu, logvar = vae.encode(image_batch)
+    mu, log_var = vae.encode(image_batch)
     eps = torch.randn_like(mu)
-    z = mu + eps * torch.exp(0.5 * logvar)
+    z = mu + eps * torch.exp(0.5 * log_var)
     kl_weight = criterion.kl_weight
     # [L, 3, 256, 256]
     reconst = vae.decode(z)
@@ -112,7 +115,8 @@ def get_iwae_score(vae, image, L=5):
 
     return iwae_score, iwae_KL_score, iwae_reconst_score
 
-############################# END OF ANOMALY SCORE ###########################
+# ############################ END OF ANOMALY SCORE ###########################
+
 
 # Define the number of samples of each score
 def compute_all_scores(vae, image):
@@ -193,8 +197,8 @@ with torch.no_grad():
             img = img.cuda()
 
         # compute output
-        recon_batch, mu, logvar = model(img)
-        loss, loss_details = criterion.forward_without_reduce(recon_batch, img, mu, logvar)
+        recon_batch, mu, log_var = model(img)
+        loss, loss_details = criterion.forward_without_reduce(recon_batch, img, mu, log_var)
         reconst_err = -loss_details['reconst_logp']
         all_reconst_err += reconst_err.tolist()
 
@@ -204,11 +208,13 @@ fit_alpha, fit_loc, fit_beta=stats.gamma.fit(all_reconst_err)
 # get auc roc for each class
 LARGE_NUMBER = 1e30
 
+
 def get_gamma_score(scores):
     result = -stats.gamma.logpdf(scores, fit_alpha, fit_loc, fit_beta)
     # replace inf in result with largest number
     result[result == np.inf] = LARGE_NUMBER
     return result
+
 
 auc_gamma_result = np.zeros([1, len(classes)+1])
 name = 'reconst_score'
